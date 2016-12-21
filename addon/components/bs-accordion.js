@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import ParentAPIMixin from '../mixins/parent-api';
 import layout from '../templates/components/bs-accordion';
 
 const { K: noop } = Ember;
@@ -30,18 +31,18 @@ const { K: noop } = Ember;
  @uses Mixins.ComponentParent
  @public
  */
-export default Ember.Component.extend({
+export default Ember.Component.extend(ParentAPIMixin, {
   layout,
   classNames: ['panel-group'],
   ariaRole: 'tablist',
 
   /**
-   * The value of the currently selected accordion item
+   * The initially-selected accordion item
    *
-   * @property selected
+   * @property initialSelected
    * @public
    */
-  selected: null,
+  initialSelected: null,
 
   /**
    * Action when the selected accordion item is about to be changed.
@@ -55,6 +56,25 @@ export default Ember.Component.extend({
    * @public
    */
   onChange: noop,
+
+  /**
+   * The value of the currently selected accordion item
+   *
+   * @property selected
+   * @private
+   */
+  selected: null,
+
+  init() {
+    this._super(...arguments);
+    this.set('selected', this.get('initialSelected'));
+  },
+
+  getParentAPI() {
+    return {
+      select: (selected) => this.set('selected', selected)
+    };
+  },
 
   actions: {
     change(newValue) {

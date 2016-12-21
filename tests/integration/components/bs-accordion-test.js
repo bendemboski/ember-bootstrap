@@ -1,8 +1,11 @@
+import Ember from 'ember';
 import {
   moduleForComponent
 } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
 import test from 'ember-sinon-qunit/test-support/test';
+
+const { run } = Ember;
 
 moduleForComponent('bs-accordion', 'Integration | Component | bs-accordion', {
   integration: true
@@ -18,8 +21,8 @@ test('accordion has correct default markup', function(assert) {
 });
 
 test('accordion with preselected item has this item expanded', function(assert) {
-  this.set('selected', 1);
-  this.render(hbs`{{#bs-accordion selected=selected as |acc|}}
+  this.set('initialSelected', 1);
+  this.render(hbs`{{#bs-accordion initialSelected=initialSelected as |acc|}}
     {{#acc.item value=1 title="TITLE1"}}CONTENT1{{/acc.item}}
     {{#acc.item value=2 title="TITLE2"}}CONTENT2{{/acc.item}}
   {{/bs-accordion}}`);
@@ -31,12 +34,15 @@ test('accordion with preselected item has this item expanded', function(assert) 
 });
 
 test('changing selected item expands this item', function(assert) {
-  this.set('selected', 1);
-  this.render(hbs`{{#bs-accordion selected=selected as |acc|}}
+  this.set('initialSelected', 1);
+  this.set('registerAPI', ({ select }) => this.set('selectItem', select));
+  this.render(hbs`{{#bs-accordion initialSelected=initialSelected registerAPI=registerAPI as |acc|}}
     {{#acc.item value=1 title="TITLE1"}}CONTENT1{{/acc.item}}
     {{#acc.item value=2 title="TITLE2"}}CONTENT2{{/acc.item}}
   {{/bs-accordion}}`);
-  this.set('selected', 2);
+  let selectItem = this.get('selectItem');
+  assert.ok(selectItem, 'it registered the select API method');
+  run(() => selectItem(2));
 
   let item = this.$('.panel:eq(1)');
   let done = assert.async();
@@ -72,7 +78,7 @@ test('clicking collapsed item expands it', function(assert) {
 });
 
 test('clicking expanded item collapses it', function(assert) {
-  this.render(hbs`{{#bs-accordion selected=1 as |acc|}}
+  this.render(hbs`{{#bs-accordion initialSelected=1 as |acc|}}
     {{#acc.item value=1 title="TITLE1"}}CONTENT1{{/acc.item}}
     {{#acc.item value=2 title="TITLE2"}}CONTENT2{{/acc.item}}
   {{/bs-accordion}}`);

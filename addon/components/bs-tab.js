@@ -1,9 +1,10 @@
 import Ember from 'ember';
 import layout from '../templates/components/bs-tab';
 import ComponentParent from 'ember-bootstrap/mixins/component-parent';
+import ParentAPI from '../mixins/parent-api';
 import TabPane from './bs-tab/pane';
 
-const { computed, isPresent, A, K: noop } = Ember;
+const { computed, isPresent, run, A, K: noop } = Ember;
 
 /**
  Tab component for dynamic tab functionality that mimics the behaviour of Bootstrap's tab.js plugin,
@@ -103,9 +104,10 @@ const { computed, isPresent, A, K: noop } = Ember;
  @namespace Components
  @extends Ember.Component
  @uses Mixins.ComponentParent
+ @uses Mixins.ParentAPI
  @public
  */
-export default Ember.Component.extend(ComponentParent, {
+export default Ember.Component.extend(ComponentParent, ParentAPI, {
   layout,
 
   /**
@@ -130,11 +132,11 @@ export default Ember.Component.extend(ComponentParent, {
   customTabs: false,
 
   /**
-   * The id (`elementId`) of the active [TabPane](Components.TabPane.html).
+   * The id (`elementId`) of the initially active [TabPane](Components.TabPane.html).
    * By default the first tab will be active, but this can be changed by setting this property
    *
    * ```hbs
-   * {{#bs-tab activeId="pane2"}}
+   * {{#bs-tab initialActiveId="pane2"}}
    *   {{#tab.pane id="pane1" title="Tab 1"}}
    *      ...
    *   {{/tab.pane}}
@@ -144,11 +146,11 @@ export default Ember.Component.extend(ComponentParent, {
    * {{/bs-tab}}
    * ```
    *
-   * @property activeId
+   * @property initialActiveId
    * @type string
    * @public
    */
-  activeId: computed.oneWay('childPanes.firstObject.elementId'),
+  initialActiveId: computed.oneWay('childPanes.firstObject.elementId'),
 
   /**
    * Set to false to disable the fade animation when switching tabs.
@@ -180,6 +182,15 @@ export default Ember.Component.extend(ComponentParent, {
    * @public
    */
   onChange: noop,
+
+  /**
+   * The id (`elementId`) of the currently active [TabPane](Components.TabPane.html).
+   *
+   * @property activeId
+   * @type string
+   * @private
+   */
+  activeId: null,
 
   /**
    * All `TabPane` child components
@@ -225,6 +236,17 @@ export default Ember.Component.extend(ComponentParent, {
     });
     return items;
   }),
+
+  didInsertElement() {
+    this._super(...arguments);
+    run.scheduleOnce('afterRender', () => this.set('activeId', this.get('initialActiveId')));
+  },
+
+  getParentAPI() {
+    return {
+      activate: (id) => this.set('activeId', id)
+    };
+  },
 
   actions: {
     select(id) {

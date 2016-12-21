@@ -1,6 +1,9 @@
+import Ember from 'ember';
 import { moduleForComponent } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
 import test from 'ember-sinon-qunit/test-support/test';
+
+const { run } = Ember;
 
 moduleForComponent('bs-tab', 'Integration | Component | bs-tab', {
   integration: true
@@ -95,10 +98,11 @@ test('first tab is active by default', function(assert) {
   assertActiveTab.call(this, assert, 1, false);
 });
 
-test('activeId activates tabs', function(assert) {
+test('initialActiveId/activate API activates tabs', function(assert) {
   this.set('paneId', 'pane1');
+  this.set('registerAPI', ({ activate }) => this.set('activatePane', activate));
   this.render(hbs`
-    {{#bs-tab fade=false activeId=paneId as |tab|}}
+    {{#bs-tab fade=false initialActiveId=paneId registerAPI=registerAPI as |tab|}}
       {{#tab.pane elementId="pane1" title="Tab 1"}}
         tabcontent 1
       {{/tab.pane}}
@@ -108,10 +112,13 @@ test('activeId activates tabs', function(assert) {
     {{/bs-tab}}
   `);
 
+  let activatePane = this.get('activatePane');
+  assert.ok(activatePane, 'it registered the activatePane API');
+
   assertActiveTab.call(this, assert, 0, true);
   assertActiveTab.call(this, assert, 1, false);
 
-  this.set('paneId', 'pane2');
+  run(() => activatePane('pane2'));
 
   assertActiveTab.call(this, assert, 0, false);
   assertActiveTab.call(this, assert, 1, true);
